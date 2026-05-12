@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AshVault — Sign In</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    body { overflow: hidden; }
+    .auth-wrapper { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+    .auth-left {
+      flex: 1;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 60px 64px;
+      position: relative; overflow: hidden;
+    }
+    .auth-left::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 30% 40%, rgba(212,160,60,0.1) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 50% at 80% 80%, rgba(192,68,10,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .auth-left::after {
+      content: ''; position: absolute; top: 0; right: 0;
+      width: 1px; height: 100%;
+      background: linear-gradient(180deg, transparent, var(--border), transparent);
+    }
+    .auth-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 64px; }
+    .auth-brand-icon {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--gold), var(--amber));
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; box-shadow: var(--glow-gold);
+    }
+    .auth-brand-name {
+      font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; letter-spacing: 0.1em;
+      background: linear-gradient(90deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .auth-tagline { font-family: var(--font-display); font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 700; line-height: 1.2; letter-spacing: 0.02em; margin-bottom: 20px; }
+    .auth-tagline span { background: linear-gradient(135deg, var(--gold-light), var(--amber)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .auth-tagline-sub { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.75; max-width: 380px; margin-bottom: 48px; }
+    .auth-features { display: flex; flex-direction: column; gap: 16px; }
+    .auth-feature-item { display: flex; align-items: center; gap: 14px; }
+    .auth-feature-dot { width: 32px; height: 32px; border-radius: 8px; background: rgba(212,160,60,0.1); border: 1px solid rgba(212,160,60,0.2); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+    .auth-feature-text { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; }
+    .auth-feature-text strong { color: var(--text-primary); font-weight: 600; }
+    .auth-right { width: min(480px, 100%); display: flex; flex-direction: column; justify-content: center; padding: 48px 52px; background: rgba(255,255,255,0.015); backdrop-filter: blur(8px); }
+    .auth-tabs { display: flex; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 999px; padding: 4px; margin-bottom: 36px; }
+    .auth-tab { flex: 1; padding: 9px; text-align: center; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.04em; border-radius: 999px; cursor: pointer; color: var(--text-muted); transition: all var(--transition); border: none; background: none; font-family: var(--font-body); }
+    .auth-tab.active { background: linear-gradient(135deg, var(--gold), var(--amber)); color: #0a0806; box-shadow: var(--glow-gold-sm); }
+    .auth-form-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 6px; color: var(--text-primary); }
+    .auth-form-sub { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 28px; }
+    .auth-form-panel { display: none; animation: fadeUp 0.35s ease both; }
+    .auth-form-panel.active { display: block; }
+    .input-icon-wrap { position: relative; }
+    .input-icon-wrap .form-input { padding-left: 42px; }
+    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; color: var(--text-muted); pointer-events: none; transition: color var(--transition); }
+    .input-icon-wrap:focus-within .input-icon { color: var(--gold-dim); }
+    .input-reveal { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; padding: 4px; transition: color var(--transition); }
+    .input-reveal:hover { color: var(--gold-dim); }
+    .strength-meter { display: none; margin-top: 8px; }
+    .strength-meter.visible { display: block; }
+    .strength-bars { display: flex; gap: 4px; margin-bottom: 4px; }
+    .strength-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.08); border-radius: 999px; transition: background 0.4s ease; }
+    .strength-bar.weak { background: #c0440a; }
+    .strength-bar.medium { background: var(--gold); }
+    .strength-bar.strong { background: #5de08a; }
+    .strength-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); transition: color 0.3s; }
+    .forgot-link { font-size: 0.78rem; color: var(--gold-dim); text-decoration: none; transition: color var(--transition); }
+    .forgot-link:hover { color: var(--gold); }
+    .or-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0; color: var(--text-muted); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .terms-text { font-size: 0.73rem; color: var(--text-muted); text-align: center; margin-top: 16px; line-height: 1.6; }
+    .terms-text a { color: var(--gold-dim); text-decoration: none; }
+    .field-error { font-size: 0.75rem; color: #f08060; margin-top: 4px; display: none; }
+    .field-error.visible { display: block; }
+    .back-home { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--text-muted); text-decoration: none; margin-top: 28px; transition: color var(--transition); }
+    .back-home:hover { color: var(--gold-dim); }
+    @media (max-width: 900px) {
+      .auth-left { display: none; }
+      .auth-right { width: 100%; padding: 48px 32px; justify-content: center; }
+      body { overflow: auto; }
+    }
+    @media (max-width: 480px) { .auth-right { padding: 40px 24px; } }
+  </style>
+</head>
+<body>
+
+  <div class="auth-wrapper">
+
+    <!-- LEFT — Branding -->
+    <div class="auth-left">
+      <div class="auth-brand animate-fade-in">
+        <div class="auth-brand-icon">🔥</div>
+        <span class="auth-brand-name">AshVault</span>
+      </div>
+
+      <h1 class="auth-tagline animate-fade-up delay-1">
+        Your secrets,<br /><span>gone in a flash.</span>
+      </h1>
+
+      <p class="auth-tagline-sub animate-fade-up delay-2">
+        Create self-destructing links for your most sensitive data. Share once — it burns on read.
+      </p>
+
+      <div class="auth-features animate-fade-up delay-3">
+        <div class="auth-feature-item">
+          <div class="auth-feature-dot">🔥</div>
+          <div class="auth-feature-text"><strong>Burn-on-Read</strong> — data wiped the moment it's accessed</div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-dot">🔑</div>
+          <div class="auth-feature-text"><strong>Password protection</strong> — optional passphrase for recipients</div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-dot">⏱</div>
+          <div class="auth-feature-text"><strong>Auto-expiry TTL</strong> — unread secrets vanish on schedule</div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-dot">🔗</div>
+          <div class="auth-feature-text"><strong>UUID v4 links</strong> — cryptographically random, impossible to guess</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT — Auth Form -->
+    <div class="auth-right">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+      </div>
+
+      <!-- LOGIN PANEL -->
+      <div class="auth-form-panel active" id="panel-login">
+        <h2 class="auth-form-title">Welcome back</h2>
+        <p class="auth-form-sub">Sign in to your AshVault account</p>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">✉</span>
+              <input type="email" class="form-input" id="login-email" placeholder="you@example.com" oninput="clearError('login-email-error')" />
+            </div>
+            <span class="field-error" id="login-email-error"></span>
+          </div>
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label class="form-label">Password</label>
+              <a href="#" class="forgot-link" onclick="showForgot(event)">Forgot password?</a>
+            </div>
+            <div class="input-icon-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" class="form-input" id="login-password" placeholder="Enter your password"
+                oninput="clearError('login-pass-error')" onkeydown="if(event.key==='Enter') handleLogin()" />
+              <button class="input-reveal" onclick="toggleReveal('login-password', this)" type="button">👁</button>
+            </div>
+            <span class="field-error" id="login-pass-error"></span>
+          </div>
+          <button class="btn btn-primary btn-full" style="margin-top:4px;" onclick="handleLogin()" id="loginBtn">Sign In →</button>
+        </div>
+        <div class="or-divider">or</div>
+        <p style="text-align:center; font-size:0.82rem; color:var(--text-muted);">
+          Don't have an account?
+          <a href="#" style="color:var(--gold-dim); text-decoration:none;" onclick="switchTab('signup'); return false;">Create one free</a>
+        </p>
+        <a href="index.html" class="back-home">← Back to home</a>
+      </div>
+
+      <!-- SIGNUP PANEL -->
+      <div class="auth-form-panel" id="panel-signup">
+        <h2 class="auth-form-title">Create account</h2>
+        <p class="auth-form-sub">Start sharing secrets securely</p>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">◈</span>
+              <input type="text" class="form-input" id="signup-name" placeholder="Your username" oninput="clearError('signup-name-error')" />
+            </div>
+            <span class="field-error" id="signup-name-error"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">✉</span>
+              <input type="email" class="form-input" id="signup-email" placeholder="you@example.com" oninput="clearError('signup-email-error')" />
+            </div>
+            <span class="field-error" id="signup-email-error"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" class="form-input" id="signup-password" placeholder="Min. 8 characters" oninput="checkStrength(this)" />
+              <button class="input-reveal" onclick="toggleReveal('signup-password', this)" type="button">👁</button>
+            </div>
+            <div class="strength-meter" id="strengthMeter">
+              <div class="strength-bars">
+                <div class="strength-bar" id="sb1"></div>
+                <div class="strength-bar" id="sb2"></div>
+                <div class="strength-bar" id="sb3"></div>
+                <div class="strength-bar" id="sb4"></div>
+              </div>
+              <span class="strength-label" id="strengthLabel">Too short</span>
+            </div>
+            <span class="field-error" id="signup-pass-error"></span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" class="form-input" id="signup-confirm" placeholder="Repeat password"
+                oninput="clearError('signup-confirm-error')" onkeydown="if(event.key==='Enter') handleSignup()" />
+            </div>
+            <span class="field-error" id="signup-confirm-error"></span>
+          </div>
+          <button class="btn btn-primary btn-full" style="margin-top:4px;" onclick="handleSignup()" id="signupBtn">Create Account →</button>
+        </div>
+        <p class="terms-text">
+          By creating an account you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        </p>
+        <p style="text-align:center; font-size:0.82rem; color:var(--text-muted); margin-top:16px;">
+          Already have an account?
+          <a href="#" style="color:var(--gold-dim); text-decoration:none;" onclick="switchTab('login'); return false;">Sign in</a>
+        </p>
+        <a href="index.html" class="back-home">← Back to home</a>
+      </div>
+
+      <!-- FORGOT PASSWORD PANEL -->
+      <div class="auth-form-panel" id="panel-forgot">
+        <h2 class="auth-form-title">Reset password</h2>
+        <p class="auth-form-sub">Enter your email and we'll send a reset link</p>
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">✉</span>
+              <input type="email" class="form-input" id="forgot-email" placeholder="you@example.com" />
+            </div>
+            <span class="field-error" id="forgot-error"></span>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="handleForgot()">Send Reset Link</button>
+        </div>
+        <p style="text-align:center; font-size:0.82rem; color:var(--text-muted); margin-top:20px;">
+          <a href="#" style="color:var(--gold-dim); text-decoration:none;" onclick="switchTab('login'); return false;">← Back to Sign In</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="config.js"></script>
+  <script>
+    // ── Tab switching ──
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.auth-form-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById(`tab-${tab}`)?.classList.add('active');
+      document.getElementById(`panel-${tab}`)?.classList.add('active');
+    }
+
+    // Open forgot panel
+    function showForgot(e) {
+      e.preventDefault();
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.auth-form-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-forgot').classList.add('active');
+    }
+    function clearError(id) {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = ''; el.classList.remove('visible'); }
+    }
+
+    function showError(id, msg) {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = msg; el.classList.add('visible'); }
+    }
+
+    function showToast(msg, type = 'info') {
+      const icons = { success: '✓', error: '✕', info: 'ℹ' };
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span style="color:var(--gold)">${icons[type]}</span> ${msg}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    // ── Password reveal toggle ──
+    function toggleReveal(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      btn.textContent = isPassword ? '🙈' : '👁';
+    }
+
+    // ── Password strength meter ──
+    function checkStrength(input) {
+      clearError('signup-pass-error');
+      const val = input.value;
+      const meter = document.getElementById('strengthMeter');
+      const label = document.getElementById('strengthLabel');
+      const bars = ['sb1', 'sb2', 'sb3', 'sb4'];
+
+      if (val.length === 0) {
+        meter.classList.remove('visible');
+        bars.forEach(id => { document.getElementById(id).className = 'strength-bar'; });
+        return;
+      }
+
+      meter.classList.add('visible');
+
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (val.length >= 12) score++;
+      if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
+      if (/[0-9]/.test(val) && /[^A-Za-z0-9]/.test(val)) score++;
+
+      const levels = ['weak', 'weak', 'medium', 'strong'];
+      const labelMap = ['Too short', 'Weak', 'Medium', 'Strong'];
+      const colorMap = { weak: '#c0440a', medium: 'var(--gold)', strong: '#5de08a' };
+
+      bars.forEach((id, i) => {
+        const bar = document.getElementById(id);
+        bar.className = 'strength-bar';
+        if (i < score) bar.classList.add(levels[score - 1] || 'weak');
+      });
+
+      label.textContent = labelMap[score] || 'Too short';
+      label.style.color = colorMap[levels[score - 1]] || 'var(--text-muted)';
+    }
+
+    // ── Handle URL hash for direct signup link ──
+    function checkInitialTab() {
+      if (window.location.hash === '#signup') switchTab('signup');
+    }
+
+    // ── LOGIN ──
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      let valid = true;
+      if (!email) { showError('login-email-error', 'Email is required'); valid = false; }
+      if (!password) { showError('login-pass-error', 'Password is required'); valid = false; }
+      if (!valid) return;
+
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/users/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password })
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          localStorage.setItem('accessToken', result.data.accessToken);
+          localStorage.setItem('user', JSON.stringify(result.data.user));
+          showToast('Welcome back! 🔥', 'success');
+          const params = new URLSearchParams(window.location.search);
+          const redirect = params.get('redirect') || 'index.html';
+          setTimeout(() => { window.location.href = redirect; }, 600);
+        } else {
+          showError('login-pass-error', result.message || 'Invalid credentials');
+        }
+      } catch (err) {
+        showToast('Cannot reach server. Is the backend running?', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In →';
+      }
+    }
+
+    // ── SIGNUP ──
+    async function handleSignup() {
+      const userName = document.getElementById('signup-name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const password = document.getElementById('signup-password').value;
+      const confirm = document.getElementById('signup-confirm').value;
+
+      let valid = true;
+      if (!userName) { showError('signup-name-error', 'Username is required'); valid = false; }
+      if (!email) { showError('signup-email-error', 'Email is required'); valid = false; }
+      if (password.length < 8) { showError('signup-pass-error', 'Password must be at least 8 characters'); valid = false; }
+      if (password !== confirm) { showError('signup-confirm-error', 'Passwords do not match'); valid = false; }
+      if (!valid) return;
+
+      const btn = document.getElementById('signupBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/users/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userName, email, password })
+        });
+
+        const result = await res.json();
+
+        if (result.success) {
+          showToast('Account created! Please sign in.', 'success');
+          setTimeout(() => switchTab('login'), 800);
+        } else {
+          if (result.message?.toLowerCase().includes('email')) {
+            showError('signup-email-error', result.message);
+          } else if (result.message?.toLowerCase().includes('username') || result.message?.toLowerCase().includes('user')) {
+            showError('signup-name-error', result.message);
+          } else {
+            showToast(result.message || 'Registration failed', 'error');
+          }
+        }
+      } catch (err) {
+        showToast('Cannot reach server. Is the backend running?', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account →';
+      }
+    }
+
+    // ── FORGOT PASSWORD ──
+    function handleForgot() {
+      const email = document.getElementById('forgot-email').value.trim();
+      if (!email) { showError('forgot-error', 'Please enter your email'); return; }
+      showToast('Password reset is not yet implemented on the server.', 'info');
+    }
+
+    // ── Redirect if already logged in ──
+    if (localStorage.getItem('accessToken')) {
+      window.location.href = 'index.html';
+    }
+
+    checkInitialTab();
+  </script>
+</body>
+</html>

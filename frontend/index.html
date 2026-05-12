@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AshVault — Secure Ephemeral Secrets</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .hero {
+      padding: 60px 0 40px;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      background: rgba(212, 160, 60, 0.08);
+      border: 1px solid rgba(212, 160, 60, 0.2);
+      border-radius: 999px;
+      padding: 6px 16px;
+      margin-bottom: 28px;
+    }
+    .hero-eyebrow::before { content: '⬡'; color: var(--gold); font-size: 0.9em; }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.8rem, 7vw, 5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: 0.03em;
+      margin-bottom: 20px;
+      animation: flicker 8s infinite;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--amber) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+    }
+    .hero-subtitle {
+      font-size: clamp(0.95rem, 2vw, 1.1rem);
+      color: var(--text-secondary);
+      max-width: 500px;
+      margin: 0 auto 48px;
+      line-height: 1.75;
+    }
+    .cta-box { text-align: center; margin: 0 auto 60px; }
+    .wizard-container { max-width: 660px; margin: 0 auto 60px; }
+    .stepper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 36px;
+    }
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+    }
+    .step-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 18px;
+      left: calc(50% + 18px);
+      width: calc(100% - 10px);
+      height: 1px;
+      background: var(--border);
+      transition: background var(--transition);
+      z-index: 0;
+    }
+    .step-item.completed:not(:last-child)::after {
+      background: linear-gradient(90deg, var(--gold), var(--border));
+    }
+    .step-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all var(--transition);
+      z-index: 1;
+      position: relative;
+    }
+    .step-item.active .step-dot {
+      border-color: var(--gold);
+      background: rgba(212, 160, 60, 0.12);
+      color: var(--gold);
+      box-shadow: var(--glow-gold-sm);
+    }
+    .step-item.completed .step-dot {
+      border-color: var(--gold);
+      background: linear-gradient(135deg, var(--gold), var(--amber));
+      color: #0a0806;
+    }
+    .step-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      transition: color var(--transition);
+      white-space: nowrap;
+    }
+    .step-item.active .step-label,
+    .step-item.completed .step-label { color: var(--gold-dim); }
+    .stepper-gap {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+      margin: 0 8px;
+      margin-bottom: 28px;
+    }
+    .step-panel { display: none; animation: fadeUp 0.4s ease both; }
+    .step-panel.active { display: block; }
+    .wizard-card {
+      background: var(--bg-card);
+      backdrop-filter: var(--glass);
+      -webkit-backdrop-filter: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .wizard-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0.5;
+    }
+    .wizard-card-title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .wizard-card-desc { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 24px; }
+    .char-counter { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); text-align: right; margin-top: 4px; }
+    .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .config-option {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      cursor: pointer;
+      transition: all var(--transition);
+      position: relative;
+    }
+    .config-option:hover, .config-option.selected { border-color: var(--gold); background: rgba(212,160,60,0.06); }
+    .config-option.selected::after { content: '✓'; position: absolute; top: 8px; right: 10px; font-size: 0.72rem; color: var(--gold); font-weight: 700; }
+    .config-option-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 6px; }
+    .config-option-value { font-size: 0.9rem; font-weight: 500; color: var(--text-primary); }
+    .view-count-selector { display: flex; gap: 8px; }
+    .view-count-btn {
+      flex: 1;
+      padding: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-align: center;
+    }
+    .view-count-btn:hover, .view-count-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,160,60,0.08); }
+    .link-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(212,160,60,0.05);
+      border: 1px solid rgba(212,160,60,0.25);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin: 20px 0;
+    }
+    .link-url { font-family: var(--font-mono); font-size: 0.82rem; color: var(--gold-light); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .success-icon {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, rgba(212,160,60,0.15), rgba(232,130,26,0.1));
+      border: 1px solid rgba(212,160,60,0.3);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+      margin: 0 auto 16px;
+      box-shadow: var(--glow-gold-sm);
+    }
+    .secret-meta { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+    .wizard-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 28px; }
+    .features { padding: 60px 0; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+    .feature-card { padding: 28px 24px; text-align: center; }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 14px; display: block; }
+    .feature-title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.05em; color: var(--text-primary); margin-bottom: 8px; }
+    .feature-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.65; }
+    @media (max-width: 680px) {
+      .wizard-card { padding: 24px 20px; }
+      .config-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .step-label { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">🔥</div>
+      <span class="nav-logo-text">AshVault</span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="about.html">How it Works</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li>
+    </ul>
+    <div class="nav-actions" id="navActions">
+      <a href="login.html" class="btn-nav">Sign In</a>
+      <a href="login.html#signup" class="btn-nav btn-nav-filled">Get Started</a>
+      <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="page">
+    <div class="container">
+      <section class="hero">
+        <div class="hero-eyebrow animate-fade-in">Burn-on-Read · UUID Links · TTL Auto-Expiry</div>
+        <h1 class="hero-title animate-fade-up delay-1">
+          Share Secrets.<br />
+          <span>Leave No Trace.</span>
+        </h1>
+        <p class="hero-subtitle animate-fade-up delay-2">
+          Create a self-destructing link for your passwords, API keys, and private notes. Once read — it's ash.
+        </p>
+      </section>
+
+      <!-- CTA (shown when NOT logged in) -->
+      <div class="cta-box animate-fade-up delay-3" id="ctaContainer" style="display:none;">
+        <a href="login.html" class="btn btn-primary btn-lg">🔥 Start Creating Secrets</a>
+      </div>
+
+      <!-- WIZARD (shown when logged in) -->
+      <div class="wizard-container animate-fade-up delay-3" id="wizardContainer" style="display:none;">
+
+        <div class="stepper">
+          <div class="step-item active" id="step-indicator-1">
+            <div class="step-dot">1</div>
+            <span class="step-label">Write</span>
+          </div>
+          <div class="stepper-gap"></div>
+          <div class="step-item" id="step-indicator-2">
+            <div class="step-dot">2</div>
+            <span class="step-label">Configure</span>
+          </div>
+          <div class="stepper-gap"></div>
+          <div class="step-item" id="step-indicator-3">
+            <div class="step-dot">3</div>
+            <span class="step-label">Share</span>
+          </div>
+        </div>
+        <div class="step-panel active" id="panel-1">
+          <div class="wizard-card">
+            <h2 class="wizard-card-title">Your Secret</h2>
+            <p class="wizard-card-desc">Type or paste the sensitive data you want to share securely.</p>
+            <div class="form-group">
+              <textarea class="form-textarea" id="secretText"
+                placeholder="Paste your API key, password, private note..." rows="7" style="min-height:170px;"
+                oninput="handleSecretInput(this)"></textarea>
+              <div class="char-counter"><span id="charCount">0</span> / 10,000</div>
+            </div>
+            <div class="wizard-nav">
+              <span></span>
+              <button class="btn btn-primary" onclick="goToStep(2)" id="nextBtn1" disabled>Configure &rarr;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step-panel" id="panel-2">
+          <div class="wizard-card">
+            <h2 class="wizard-card-title">Configure Security</h2>
+            <p class="wizard-card-desc">Set expiry and optional password protection.</p>
+
+            <div class="form-group" style="margin-bottom:20px;">
+              <label class="form-label">Expiry Time</label>
+              <div class="config-grid" style="grid-template-columns: repeat(3,1fr); margin-bottom:0;">
+                <div class="config-option selected" onclick="selectExpiry(this, '1h')" data-val="1h">
+                  <div class="config-option-label">Quick</div>
+                  <div class="config-option-value">1 Hour</div>
+                </div>
+                <div class="config-option" onclick="selectExpiry(this, '24h')" data-val="24h">
+                  <div class="config-option-label">Standard</div>
+                  <div class="config-option-value">24 Hours</div>
+                </div>
+                <div class="config-option" onclick="selectExpiry(this, '7d')" data-val="7d">
+                  <div class="config-option-label">Extended</div>
+                  <div class="config-option-value">7 Days</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:14px;">
+              <label class="toggle-wrapper" for="passwordToggle">
+                <div>
+                  <div class="toggle-label">🔒 Password Protection</div>
+                  <div class="toggle-desc">Recipient must enter a password to view</div>
+                </div>
+                <div class="toggle">
+                  <input type="checkbox" id="passwordToggle" onchange="togglePassword(this)" />
+                  <div class="toggle-track"></div>
+                </div>
+              </label>
+            </div>
+
+            <div id="passwordField" style="display:none; margin-bottom:14px;">
+              <div class="form-group">
+                <label class="form-label">Set Password</label>
+                <input type="password" class="form-input" id="secretPassword" placeholder="Enter a passphrase..." />
+              </div>
+            </div>
+
+            <div class="wizard-nav">
+              <button class="btn btn-ghost" onclick="goToStep(1)">&larr; Back</button>
+              <button class="btn btn-primary" onclick="generateLink()">🔥 Generate Link</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step-panel" id="panel-3">
+          <div class="wizard-card" style="text-align:center;">
+            <div class="success-icon">🔐</div>
+            <h2 class="wizard-card-title">Secret Vault Sealed</h2>
+            <p class="wizard-card-desc" style="margin-bottom:6px;">
+              Share this link — it self-destructs after being read.
+            </p>
+            <div class="link-box">
+              <span class="link-url" id="generatedLink"></span>
+              <button class="copy-btn" id="copyBtn" onclick="copyLink()">
+                <span id="copyIcon">⧉</span> <span id="copyText">Copy</span>
+              </button>
+            </div>
+            <div class="secret-meta">
+              <span class="badge badge-gold" id="expiryBadge">⏱ Expires in 1 hour</span>
+              <span class="badge badge-active">🔒 Secured</span>
+            </div>
+            <div class="divider"></div>
+            <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-sm" onclick="resetWizard()">+ Create Another</button>
+              <a href="dashboard.html" class="btn btn-ghost btn-sm">View Dashboard →</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FEATURES -->
+      <section class="features">
+        <div style="text-align:center; margin-bottom:8px;">
+          <div class="section-eyebrow">Why AshVault</div>
+          <h2 class="section-title">Built for <span>Zero Trust</span></h2>
+        </div>
+        <div class="features-grid">
+          <div class="glass-card feature-card">
+            <span class="feature-icon">🔥</span>
+            <div class="feature-title">Burn-on-Read</div>
+            <p class="feature-desc">The moment your secret is viewed, it's permanently wiped from the database. No logs, no residue.</p>
+          </div>
+          <div class="glass-card feature-card">
+            <span class="feature-icon">🔗</span>
+            <div class="feature-title">UUID Links</div>
+            <p class="feature-desc">Each secret gets a cryptographically random UUID v4 link — impossible to guess with 2¹²² possible combinations.</p>
+          </div>
+          <div class="glass-card feature-card">
+            <span class="feature-icon">⏱</span>
+            <div class="feature-title">Auto-Expiry TTL</div>
+            <p class="feature-desc">Set a time limit on your secrets. Unread vaults vanish automatically when the timer runs out.</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2026 Created By : Saubhagya Srivastava <strong style="color:var(--gold-dim);">AshVault</strong> · <a href="about.html">How it Works</a></p>
+  </footer>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="config.js"></script>
+  <script>
+    function handleSignOut() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      window.location.href = 'index.html';
+    }
+
+    function updateNavbar() {
+      const actions = document.getElementById('navActions');
+
+      if (localStorage.getItem('accessToken')) {
+        actions.innerHTML = `
+          <a href="dashboard.html" class="btn-nav">Dashboard</a>
+          <button class="btn-nav btn-nav-filled" onclick="handleSignOut()">Sign Out</button>
+          <button class="nav-hamburger" id="hamburger" aria-label="Menu">
+            <span></span><span></span><span></span>
+          </button>
+        `;
+      }
+
+      document.getElementById('hamburger')?.addEventListener('click', () => {
+        document.getElementById('navLinks').classList.toggle('open');
+      });
+    }
+
+    function initPage() {
+      const isLoggedIn = !!localStorage.getItem('accessToken');
+      document.getElementById('wizardContainer').style.display = isLoggedIn ? 'block' : 'none';
+      document.getElementById('ctaContainer').style.display = isLoggedIn ? 'none' : 'block';
+    }
+
+    updateNavbar();
+    initPage();
+
+    let currentStep = 1;
+    let expiryVal = '1h';
+
+    function goToStep(step) {
+      document.getElementById(`panel-${currentStep}`).classList.remove('active');
+      document.getElementById(`step-indicator-${currentStep}`).classList.remove('active');
+
+      if (step > currentStep) {
+        document.getElementById(`step-indicator-${currentStep}`).classList.add('completed');
+        document.querySelector(`#step-indicator-${currentStep} .step-dot`).textContent = '✓';
+      } else {
+        document.getElementById(`step-indicator-${currentStep}`).classList.remove('completed');
+        document.querySelector(`#step-indicator-${currentStep} .step-dot`).textContent = currentStep;
+      }
+
+      currentStep = step;
+
+      document.getElementById(`panel-${currentStep}`).classList.add('active');
+      document.getElementById(`step-indicator-${currentStep}`).classList.add('active');
+    }
+
+    function handleSecretInput(el) {
+      const len = el.value.length;
+      document.getElementById('charCount').textContent = len.toLocaleString();
+      document.getElementById('nextBtn1').disabled = len === 0;
+    }
+
+    function selectExpiry(el, val) {
+      expiryVal = val;
+      el.closest('.config-grid')
+        .querySelectorAll('.config-option')
+        .forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+
+    function togglePassword(el) {
+      document.getElementById('passwordField').style.display = el.checked ? 'block' : 'none';
+    }
+
+    async function generateLink() {
+      const content = document.getElementById('secretText').value;
+      const password = document.getElementById('secretPassword').value;
+
+      const btn = document.querySelector('button[onclick="generateLink()"]');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      try {
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+          window.location.href = 'login.html?redirect=index.html';
+          return;
+        }
+
+        const response = await fetch(`${API_BASE}/api/v1/secrets/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            content,
+            password: password || null,
+            expiresAt: expiryVal
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          const secretID = result.data.secretID;
+          const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+          const realLink = `${basePath}/secret-view.html?id=${secretID}`;
+
+          document.getElementById('generatedLink').textContent = realLink;
+
+          const expiryLabels = { '1h': '1 hour', '24h': '24 hours', '7d': '7 days' };
+          document.getElementById('expiryBadge').textContent = `⏱ Expires in ${expiryLabels[expiryVal]}`;
+
+          goToStep(3);
+          showToast('Secret created! 🔐', 'success');
+
+        } else {
+          showToast(result.message || 'Error creating secret', 'error');
+        }
+
+      } catch (error) {
+        showToast('Server error. Is the backend running?', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔥 Generate Link';
+      }
+    }
+
+    function copyLink() {
+      const url = document.getElementById('generatedLink').textContent;
+
+      navigator.clipboard.writeText(url).then(() => {
+        document.getElementById('copyIcon').textContent = '✓';
+        document.getElementById('copyText').textContent = 'Copied!';
+        document.getElementById('copyBtn').classList.add('copied');
+
+        showToast('Link copied!', 'success');
+
+        setTimeout(() => {
+          document.getElementById('copyIcon').textContent = '⧉';
+          document.getElementById('copyText').textContent = 'Copy';
+          document.getElementById('copyBtn').classList.remove('copied');
+        }, 2500);
+      });
+    }
+
+    function resetWizard() {
+      document.getElementById('secretText').value = '';
+      document.getElementById('charCount').textContent = '0';
+      document.getElementById('nextBtn1').disabled = true;
+
+      document.getElementById('secretPassword').value = '';
+      document.getElementById('passwordField').style.display = 'none';
+      document.getElementById('passwordToggle').checked = false;
+
+      [1, 2, 3].forEach(i => {
+        document.getElementById(`step-indicator-${i}`).classList.remove('active', 'completed');
+        document.querySelector(`#step-indicator-${i} .step-dot`).textContent = i;
+      });
+
+      currentStep = 1;
+      expiryVal = '1h';
+
+      document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-1').classList.add('active');
+      document.getElementById('step-indicator-1').classList.add('active');
+
+      // Reset expiry selection UI
+      document.querySelectorAll('.config-option').forEach(o => o.classList.remove('selected'));
+      document.querySelector('.config-option[data-val="1h"]')?.classList.add('selected');
+    }
+
+    function showToast(msg, type = 'info') {
+      const icons = { success: '✓', error: '✕', info: 'ℹ' };
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span style="color:var(--gold)">${icons[type]}</span> ${msg}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+  </script>
+</body>
+</html>

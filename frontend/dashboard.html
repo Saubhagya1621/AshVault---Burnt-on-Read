@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AshVault — Dashboard</title>
+  <link rel="stylesheet" href="shared.css" />
+  <style>
+    .dashboard-header { padding: 48px 0 32px; }
+    .dashboard-greeting { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .greeting-eyebrow { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 8px; }
+    .greeting-title { font-family: var(--font-display); font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; letter-spacing: 0.03em; line-height: 1.2; color: var(--text-primary); }
+    .greeting-title span { background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--amber)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .greeting-subtitle { font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 32px 0; }
+    .stat-card { padding: 22px 20px; position: relative; overflow: hidden; }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0.4; }
+    .stat-label { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+    .stat-value { font-family: var(--font-mono); font-size: 2rem; font-weight: 500; line-height: 1; color: var(--text-primary); margin-bottom: 6px; }
+    .stat-value.gold { color: var(--gold); }
+    .stat-value.green { color: #5de08a; }
+    .stat-delta { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+    .stat-icon { position: absolute; top: 18px; right: 18px; font-size: 1.4rem; opacity: 0.25; }
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 280px; gap: 20px; margin-bottom: 40px; }
+    .secrets-panel { padding: 28px; }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 12px; }
+    .panel-title { font-family: var(--font-display); font-size: 1rem; font-weight: 600; letter-spacing: 0.06em; color: var(--text-primary); }
+    .panel-actions { display: flex; align-items: center; gap: 10px; }
+    .filter-tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px; }
+    .filter-tab { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 6px 14px; border-radius: 5px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; transition: all var(--transition); }
+    .filter-tab.active { background: rgba(212,160,60,0.12); color: var(--gold); border: 1px solid rgba(212,160,60,0.2); }
+    .secrets-list { display: flex; flex-direction: column; gap: 10px; }
+    .secret-row { display: grid; grid-template-columns: auto 1fr auto auto auto; align-items: center; gap: 14px; padding: 14px 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--radius-sm); transition: all var(--transition); cursor: pointer; animation: fadeUp 0.4s ease both; }
+    .secret-row:hover { border-color: var(--border-bright); background: rgba(212,160,60,0.04); }
+    .secret-row.burned { opacity: 0.6; }
+    .secret-type-icon { width: 34px; height: 34px; border-radius: var(--radius-sm); background: rgba(212,160,60,0.08); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.95rem; flex-shrink: 0; }
+    .secret-info { overflow: hidden; }
+    .secret-id { font-family: var(--font-mono); font-size: 0.8rem; color: var(--gold-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+    .secret-meta-row { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; color: var(--text-muted); }
+    .secret-expiry { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+    .secret-expiry.soon { color: var(--gold); }
+    .secret-expiry.expired { color: #f08060; }
+    .secret-expiry.burned-label { color: #c07050; }
+    .secret-actions { display: flex; gap: 6px; opacity: 0; transition: opacity var(--transition); }
+    .secret-row:hover .secret-actions { opacity: 1; }
+    .icon-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; transition: all var(--transition); }
+    .icon-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(212,160,60,0.08); }
+    .icon-btn.danger:hover { border-color: #f08060; color: #f08060; background: rgba(240,128,96,0.08); }
+    .empty-state { text-align: center; padding: 60px 24px; color: var(--text-muted); display: none; }
+    .empty-state-icon { font-size: 2.5rem; margin-bottom: 16px; opacity: 0.4; }
+    .empty-state p { font-size: 0.88rem; margin-bottom: 20px; }
+    .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); }
+    .pagination-info { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); }
+    .pagination-btns { display: flex; gap: 6px; }
+    .page-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-size: 0.78rem; font-family: var(--font-mono); cursor: pointer; transition: all var(--transition); }
+    .page-btn:hover, .page-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,160,60,0.08); }
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .quick-create { padding: 24px; text-align: center; position: relative; overflow: hidden; }
+    .quick-create::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0.5; }
+    .quick-create-icon { width: 52px; height: 52px; background: linear-gradient(135deg, rgba(212,160,60,0.15), rgba(232,130,26,0.1)); border: 1px solid rgba(212,160,60,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 14px; box-shadow: var(--glow-gold-sm); }
+    .quick-create h3 { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.06em; margin-bottom: 8px; }
+    .quick-create p { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 18px; line-height: 1.6; }
+    .activity-panel { padding: 22px; flex: 1; }
+    .activity-list { display: flex; flex-direction: column; gap: 0; margin-top: 16px; }
+    .activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(212,160,60,0.06); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .activity-dot.create { background: var(--gold); box-shadow: var(--glow-gold-sm); }
+    .activity-dot.burn  { background: #f08060; }
+    .activity-dot.expire { background: var(--text-muted); }
+    .activity-content { flex: 1; }
+    .activity-text { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
+    .activity-text strong { color: var(--text-primary); font-weight: 500; }
+    .activity-time { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; }
+    .skeleton { background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skeleton-row { height: 62px; margin-bottom: 10px; }
+    .search-bar { position: relative; max-width: 220px; }
+    .search-bar input { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.82rem; padding: 8px 14px 8px 34px; outline: none; font-family: var(--font-body); transition: border-color var(--transition); }
+    .search-bar input:focus { border-color: var(--gold); }
+    .search-bar input::placeholder { color: var(--text-muted); }
+    .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--text-muted); pointer-events: none; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(5,4,3,0.75); backdrop-filter: blur(6px); z-index: 2000; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: #0f0d0a; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 36px; max-width: 400px; width: calc(100% - 40px); text-align: center; animation: fadeUp 0.35s ease both; position: relative; overflow: hidden; }
+    .modal-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, #f08060, transparent); opacity: 0.6; }
+    .modal-icon { font-size: 2rem; margin-bottom: 14px; }
+    .modal-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; letter-spacing: 0.06em; margin-bottom: 10px; }
+    .modal-desc { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.65; margin-bottom: 24px; }
+    .modal-actions { display: flex; gap: 12px; justify-content: center; }
+    @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } .sidebar { flex-direction: row; flex-wrap: wrap; } .sidebar > * { flex: 1; min-width: 260px; } .stats-row { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 600px) { .stats-row { grid-template-columns: repeat(2, 1fr); } .secret-row { grid-template-columns: auto 1fr auto; } .secret-expiry { display: none; } .search-bar { max-width: 100%; } .panel-header { flex-direction: column; align-items: flex-start; } }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">🔥</div>
+      <span class="nav-logo-text">AshVault</span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Create</a></li>
+      <li><a href="about.html">How it Works</a></li>
+      <li><a href="dashboard.html" class="active">Dashboard</a></li>
+    </ul>
+    <div class="nav-actions" id="navActions"></div>
+  </nav>
+
+  <main class="page">
+    <div class="container">
+
+      <div class="dashboard-header animate-fade-in">
+        <div class="dashboard-greeting">
+          <div>
+            <div class="greeting-eyebrow">Vault Overview</div>
+            <h1 class="greeting-title">Welcome back, <span id="greetingName">Operator</span></h1>
+            <p class="greeting-subtitle">Your secrets at a glance.</p>
+          </div>
+          <a href="index.html" class="btn btn-primary animate-fade-in delay-2">🔥 New Secret</a>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="glass-card stat-card animate-fade-up delay-1">
+          <span class="stat-icon">📦</span>
+          <div class="stat-label">Total Secrets</div>
+          <div class="stat-value gold" id="statTotal">—</div>
+          <div class="stat-delta">all time</div>
+        </div>
+        <div class="glass-card stat-card animate-fade-up delay-2">
+          <span class="stat-icon">🟢</span>
+          <div class="stat-label">Active</div>
+          <div class="stat-value green" id="statActive">—</div>
+          <div class="stat-delta">awaiting first view</div>
+        </div>
+        <div class="glass-card stat-card animate-fade-up delay-3">
+          <span class="stat-icon">⏱</span>
+          <div class="stat-label">Expired / Burned</div>
+          <div class="stat-value" id="statExpired">—</div>
+          <div class="stat-delta">TTL elapsed or viewed</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+
+        <div class="glass-card secrets-panel animate-fade-up delay-2">
+          <div class="panel-header">
+            <div class="panel-title">Your Secrets</div>
+            <div class="panel-actions">
+              <div class="search-bar">
+                <span class="search-icon">⌕</span>
+                <input type="text" placeholder="Search vaults..." id="searchInput" oninput="filterSecrets(this.value)" />
+              </div>
+              <div class="filter-tabs">
+                <button class="filter-tab active" onclick="setFilter('all', this)">All</button>
+                <button class="filter-tab" onclick="setFilter('active', this)">Active</button>
+                <button class="filter-tab" onclick="setFilter('expired', this)">Expired</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="secrets-list" id="secretsList">
+            <div class="skeleton skeleton-row"></div>
+            <div class="skeleton skeleton-row"></div>
+            <div class="skeleton skeleton-row"></div>
+          </div>
+
+          <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">🗝️</div>
+            <p>No secrets found.</p>
+            <a href="index.html" class="btn btn-ghost btn-sm">Create your first secret</a>
+          </div>
+
+          <div class="pagination">
+            <span class="pagination-info" id="paginationInfo">Loading...</span>
+            <div class="pagination-btns" id="paginationBtns">
+              <button class="page-btn" onclick="changePage(-1)">‹</button>
+              <button class="page-btn" onclick="changePage(1)">›</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar">
+          <div class="glass-card quick-create animate-fade-up delay-3">
+            <div class="quick-create-icon">🔐</div>
+            <h3>New Vault</h3>
+            <p>Generate a self-destructing link in seconds.</p>
+            <a href="index.html" class="btn btn-primary btn-full">Create Secret</a>
+          </div>
+
+          <div class="glass-card activity-panel animate-fade-up delay-4">
+            <div class="panel-title">Recent Activity</div>
+            <div class="activity-list" id="activityFeed">
+              <div class="skeleton" style="height:48px; margin-bottom:8px;"></div>
+              <div class="skeleton" style="height:48px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2026 <strong style="color:var(--gold-dim);">AshVault</strong> · <a href="about.html">How it Works</a></p>
+  </footer>
+
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+      <div class="modal-icon">🔥</div>
+      <div class="modal-title">Burn this Secret?</div>
+      <p class="modal-desc">This permanently destroys the secret and its link. This cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">Burn It</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="config.js"></script>
+  <script>
+    // AUTH GUARD
+    if (!localStorage.getItem('accessToken')) {
+      window.location.href = 'login.html?redirect=dashboard.html';
+    }
+
+    function getUser() {
+      try { return JSON.parse(localStorage.getItem('user')); } catch { return null; }
+    }
+
+    function handleSignOut() {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    }
+
+    async function apiFetch(url, options = {}) {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch(url, {
+        ...options,
+        headers: { 'Authorization': `Bearer ${token}`, ...options.headers }
+      });
+      if (res.status === 401) { handleSignOut(); return null; }
+      return res;
+    }
+
+    function updateNavbar() {
+      const user = getUser();
+      const displayName = user?.userName || 'Operator';
+      document.getElementById('greetingName').textContent = displayName;
+      const actions = document.getElementById('navActions');
+      actions.innerHTML = `
+        <span style="font-size:0.8rem; color:var(--text-muted); margin-right:4px;">👤 ${displayName}</span>
+        <button class="btn-nav btn-nav-filled" onclick="handleSignOut()">Sign Out</button>
+        <button class="nav-hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+      `;
+      document.getElementById('hamburger')?.addEventListener('click', () => {
+        document.getElementById('navLinks').classList.toggle('open');
+      });
+    }
+
+    function getExpiryDisplay(secret) {
+      // Burned by reading (burn-on-read)
+      if (secret.isBurned) {
+        return { label: '🔥 Burned', cssClass: 'burned-label' };
+      }
+      if (!secret.expiresAt) return { label: 'No expiry', cssClass: '' };
+      const now = new Date();
+      const expiry = new Date(secret.expiresAt);
+      const diffMs = expiry - now;
+      const diffHours = diffMs / (1000 * 60 * 60);
+      if (diffMs <= 0) return { label: 'Expired', cssClass: 'expired' };
+      if (diffHours < 2) { const mins = Math.round(diffMs / 60000); return { label: `~${mins}m left`, cssClass: 'soon' }; }
+      if (diffHours < 24) { const hrs = Math.round(diffHours); return { label: `~${hrs}h left`, cssClass: 'soon' }; }
+      return { label: expiry.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }), cssClass: '' };
+    }
+
+    function timeAgo(dateStr) {
+      if (!dateStr) return 'Recently';
+      const now = new Date(), then = new Date(dateStr);
+      const diffMins = Math.floor((now - then) / 60000);
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours}h ago`;
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return then.toLocaleDateString();
+    }
+
+    function getSecretStatus(s) {
+      if (s.isBurned) return 'expired';
+      if (s.expiresAt && new Date(s.expiresAt) <= new Date()) return 'expired';
+      return 'active';
+    }
+
+    let ALL_SECRETS = [];
+
+    async function fetchSecrets() {
+      try {
+        const response = await apiFetch(`${API_BASE}/api/v1/secrets/my-secrets`);
+        if (!response) return;
+
+        const result = await response.json();
+        if (result.success) {
+          ALL_SECRETS = result.data.map(s => {
+            const status = getSecretStatus(s);
+            const { label: expiryLabel, cssClass: expiryClass } = getExpiryDisplay(s);
+            return {
+              id: s.secretID,
+              type: s.password ? '🔒' : '🔐',
+              status,
+              isBurned: s.isBurned || false,
+              expiry: expiryLabel,
+              expiryClass,
+              created: timeAgo(s.createdAt),
+              createdAt: s.createdAt,
+              burnedAt: s.burnedAt || null,
+              expiresAt: s.expiresAt,
+            };
+          });
+          updateStats();
+          renderSecrets();
+          renderActivity();
+        } else {
+          showToast('Failed to load secrets', 'error');
+          document.getElementById('secretsList').innerHTML = '';
+          renderSecrets();
+        }
+      } catch (error) {
+        showToast('Cannot reach server. Is the backend running?', 'error');
+        document.getElementById('secretsList').innerHTML = '';
+        renderSecrets();
+      }
+    }
+
+    function updateStats() {
+      const total = ALL_SECRETS.length;
+      const active = ALL_SECRETS.filter(s => s.status === 'active').length;
+      const expired = ALL_SECRETS.filter(s => s.status === 'expired').length;
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statActive').textContent = active;
+      document.getElementById('statExpired').textContent = expired;
+    }
+
+    function renderActivity() {
+      const feed = document.getElementById('activityFeed');
+      if (ALL_SECRETS.length === 0) {
+        feed.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:20px 0;">No activity yet</p>`;
+        return;
+      }
+
+      // Build activity events: creation + burn events, sorted by most recent
+      const events = [];
+
+      ALL_SECRETS.forEach(s => {
+        const shortId = s.id ? s.id.slice(0, 8) + '…' : 'unknown';
+
+        // Always show creation event
+        if (s.createdAt) {
+          events.push({
+            type: 'create',
+            text: `Secret <strong>${shortId}</strong> created`,
+            time: s.createdAt,
+          });
+        }
+
+        // Show burn event if the secret was read (burned on read)
+        if (s.isBurned && s.burnedAt) {
+          events.push({
+            type: 'burn',
+            text: `<strong>${shortId}</strong> was read & burned 🔥`,
+            time: s.burnedAt,
+          });
+        }
+        // Show TTL expiry event (no burnedAt, but expired by time)
+        else if (s.status === 'expired' && !s.isBurned && s.expiresAt) {
+          events.push({
+            type: 'expire',
+            text: `<strong>${shortId}</strong> expired (TTL)`,
+            time: s.expiresAt,
+          });
+        }
+      });
+
+      events.sort((a, b) => new Date(b.time) - new Date(a.time));
+      const recent = events.slice(0, 6);
+
+      if (recent.length === 0) {
+        feed.innerHTML = `<p style="font-size:0.8rem; color:var(--text-muted); text-align:center; padding:20px 0;">No activity yet</p>`;
+        return;
+      }
+
+      feed.innerHTML = recent.map(e => `
+        <div class="activity-item">
+          <div class="activity-dot ${e.type}"></div>
+          <div class="activity-content">
+            <div class="activity-text">${e.text}</div>
+            <div class="activity-time">${timeAgo(e.time)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    let currentFilter = 'all';
+    let currentPage = 1;
+    let searchQuery = '';
+    let deleteTarget = null;
+    const PAGE_SIZE = 5;
+
+    function getFiltered() {
+      return ALL_SECRETS.filter(s => {
+        const matchFilter = currentFilter === 'all' || s.status === currentFilter;
+        const matchSearch = searchQuery === '' || s.id.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchFilter && matchSearch;
+      });
+    }
+
+    function renderSecrets() {
+      const filtered = getFiltered();
+      const total = filtered.length;
+      const totalPages = Math.ceil(total / PAGE_SIZE);
+      currentPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const page = filtered.slice(start, start + PAGE_SIZE);
+      const list = document.getElementById('secretsList');
+      const empty = document.getElementById('emptyState');
+      const info = document.getElementById('paginationInfo');
+
+      list.innerHTML = '';
+      if (total === 0) {
+        empty.style.display = 'block';
+        info.textContent = 'No results';
+      } else {
+        empty.style.display = 'none';
+        info.textContent = `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, total)} of ${total}`;
+        page.forEach((s, i) => {
+          const row = document.createElement('div');
+          row.className = `secret-row${s.isBurned ? ' burned' : ''}`;
+          row.style.animationDelay = `${i * 0.05}s`;
+
+          let statusBadge = '';
+          if (s.status === 'active') {
+            statusBadge = `<span class="badge badge-active">● Active</span>`;
+          } else if (s.isBurned) {
+            statusBadge = `<span class="badge badge-expired">🔥 Burned</span>`;
+          } else {
+            statusBadge = `<span class="badge badge-expired">⏱ Expired</span>`;
+          }
+
+          // Only show the burn button for active (unburned, unexpired) secrets
+          const burnBtn = s.status === 'active'
+            ? `<button class="icon-btn danger" title="Burn secret" onclick="openDeleteModal('${s.id}')">🔥</button>`
+            : '';
+
+          row.innerHTML = `
+            <div class="secret-type-icon">${s.type}</div>
+            <div class="secret-info">
+              <div class="secret-id">vault/${s.id}</div>
+              <div class="secret-meta-row">${statusBadge}<span>🕐 ${s.created}</span></div>
+            </div>
+            <div class="secret-expiry ${s.expiryClass}">${s.expiry}</div>
+            <div class="secret-actions">
+              ${s.status === 'active' ? `<button class="icon-btn" title="Copy link" onclick="copySecret('${s.id}')">⧉</button>` : ''}
+              ${burnBtn}
+            </div>
+          `;
+          list.appendChild(row);
+        });
+      }
+
+      const btns = document.getElementById('paginationBtns');
+      btns.innerHTML = `<button class="page-btn" onclick="changePage(-1)">‹</button>`;
+      for (let n = 1; n <= totalPages; n++) {
+        btns.innerHTML += `<button class="page-btn ${n === currentPage ? 'active' : ''}" onclick="jumpPage(${n})">${n}</button>`;
+      }
+      btns.innerHTML += `<button class="page-btn" onclick="changePage(1)">›</button>`;
+    }
+
+    function setFilter(filter, el) {
+      currentFilter = filter;
+      currentPage = 1;
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      renderSecrets();
+    }
+
+    function filterSecrets(q) { searchQuery = q; currentPage = 1; renderSecrets(); }
+    function changePage(dir) { currentPage = Math.max(1, Math.min(Math.ceil(getFiltered().length / PAGE_SIZE), currentPage + dir)); renderSecrets(); }
+    function jumpPage(n) { currentPage = n; renderSecrets(); }
+
+    function copySecret(id) {
+      const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+      const url = `${basePath}/secret-view.html?id=${id}`;
+      navigator.clipboard.writeText(url).then(() => showToast('Link copied!', 'success'));
+    }
+
+    function openDeleteModal(id) { deleteTarget = id; document.getElementById('deleteModal').classList.add('open'); }
+    function closeModal() { document.getElementById('deleteModal').classList.remove('open'); deleteTarget = null; }
+
+    async function confirmDelete() {
+      if (!deleteTarget) return;
+      try {
+        const res = await apiFetch(`${API_BASE}/api/v1/secrets/burn/${deleteTarget}`, { method: 'DELETE' });
+        if (!res) return;
+        const result = await res.json();
+        if (!result.success) { showToast(result.message || 'Failed to burn secret', 'error'); closeModal(); return; }
+      } catch (e) {
+        showToast('Server error while burning secret', 'error'); closeModal(); return;
+      }
+      closeModal();
+      await fetchSecrets();
+      showToast('Secret burned. 🔥', 'success');
+    }
+
+    function showToast(msg, type = 'info') {
+      const icons = { success: '✓', error: '✕', info: 'ℹ' };
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<span style="color:var(--gold)">${icons[type]}</span> ${msg}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    document.getElementById('deleteModal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
+
+    updateNavbar();
+    fetchSecrets();
+  </script>
+</body>
+</html>
