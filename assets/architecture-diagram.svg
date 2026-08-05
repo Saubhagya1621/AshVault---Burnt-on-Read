@@ -1,0 +1,61 @@
+<svg width="720" height="380" viewBox="0 0 720 380" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0D89A"/>
+      <stop offset="50%" stop-color="#D4A03C"/>
+      <stop offset="100%" stop-color="#E8821A"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#D4A03C"/>
+    </marker>
+  </defs>
+
+  <!-- background -->
+  <rect width="720" height="380" fill="#0a0806"/>
+
+  <!-- Frontend box -->
+  <rect x="30" y="40" width="180" height="90" rx="10" fill="#151210" stroke="url(#goldGrad)" stroke-width="1.5"/>
+  <text x="120" y="72" text-anchor="middle" fill="#F0D89A" font-family="Georgia, serif" font-size="15" font-weight="700">Frontend</text>
+  <text x="120" y="92" text-anchor="middle" fill="#a89a82" font-family="monospace" font-size="11">HTML / CSS / JS</text>
+  <text x="120" y="108" text-anchor="middle" fill="#a89a82" font-family="monospace" font-size="11">Hosted on Vercel</text>
+
+  <!-- Backend box -->
+  <rect x="270" y="40" width="180" height="90" rx="10" fill="#151210" stroke="url(#goldGrad)" stroke-width="1.5"/>
+  <text x="360" y="72" text-anchor="middle" fill="#F0D89A" font-family="Georgia, serif" font-size="15" font-weight="700">Backend</text>
+  <text x="360" y="92" text-anchor="middle" fill="#a89a82" font-family="monospace" font-size="11">Node.js / Express</text>
+  <text x="360" y="108" text-anchor="middle" fill="#a89a82" font-family="monospace" font-size="11">Hosted on Render</text>
+
+  <!-- MongoDB box -->
+  <rect x="510" y="40" width="180" height="90" rx="10" fill="#151210" stroke="#2f9e44" stroke-width="1.5"/>
+  <text x="600" y="72" text-anchor="middle" fill="#7ee08a" font-family="Georgia, serif" font-size="15" font-weight="700">MongoDB Atlas</text>
+  <text x="600" y="92" text-anchor="middle" fill="#a89a82" font-family="monospace" font-size="11">secrets, users</text>
+  <text x="600" y="108" text-anchor="middle" fill="#a89a82" font-family="monospace" font-size="11">collections</text>
+
+  <!-- Groq box -->
+  <rect x="270" y="250" width="180" height="90" rx="10" fill="#151210" stroke="#c084fc" stroke-width="1.5"/>
+  <text x="360" y="282" text-anchor="middle" fill="#e2b8ff" font-family="Georgia, serif" font-size="15" font-weight="700">Groq API</text>
+  <text x="360" y="302" text-anchor="middle" fill="#a89a82" font-family="monospace" font-size="11">Llama 3.1</text>
+  <text x="360" y="318" text-anchor="middle" fill="#a89a82" font-family="monospace" font-size="11">sensitivity check</text>
+
+  <!-- Frontend -> Backend arrow -->
+  <line x1="210" y1="85" x2="266" y2="85" stroke="#D4A03C" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="238" y="75" text-anchor="middle" fill="#8a7c66" font-family="monospace" font-size="9">HTTPS</text>
+
+  <!-- Backend -> Frontend (response) arrow -->
+  <line x1="266" y1="105" x2="210" y2="105" stroke="#8a7c66" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="238" y="118" text-anchor="middle" fill="#8a7c66" font-family="monospace" font-size="9">JSON + cookies</text>
+
+  <!-- Backend -> Mongo arrow -->
+  <line x1="450" y1="85" x2="506" y2="85" stroke="#2f9e44" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="478" y="75" text-anchor="middle" fill="#8a7c66" font-family="monospace" font-size="9">CRUD</text>
+
+  <!-- Backend -> Groq arrow -->
+  <line x1="360" y1="130" x2="360" y2="246" stroke="#c084fc" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="440" y="192" text-anchor="middle" fill="#8a7c66" font-family="monospace" font-size="9">content (in-memory only,</text>
+  <text x="440" y="204" text-anchor="middle" fill="#8a7c66" font-family="monospace" font-size="9">never persisted)</text>
+
+  <!-- caption -->
+  <text x="360" y="360" text-anchor="middle" fill="#5c5347" font-family="monospace" font-size="10">
+    AshVault — request flow: browser → Express API → MongoDB (persistence) + Groq (sensitivity classification)
+  </text>
+</svg>
