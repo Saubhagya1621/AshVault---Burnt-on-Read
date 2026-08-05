@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Secret } from "../models/secret.model.js";
 import { User } from "../models/user.model.js";
+import { analyzeSecretSensitivity } from "../utils/analyzeSecret.js";
 
 const createSecret = asyncHandler(async (req, res) => {
     const { content, password, expiresAt } = req.body;
@@ -38,9 +39,10 @@ const createSecret = asyncHandler(async (req, res) => {
             { $push: { secrets: newSecret._id } }
         );
     }
+    const sensitivityHint = await analyzeSecretSensitivity(content);
 
     return res.status(201).json(
-        new ApiResponse(201, { secretID: newSecret.secretID }, "Link generated successfully!")
+        new ApiResponse(201, { secretID: newSecret.secretID, sensitivityHint }, "Link generated successfully!")
     );
 });
 

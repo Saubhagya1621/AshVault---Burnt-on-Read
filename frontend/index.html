@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,6 +11,7 @@
       padding: 60px 0 40px;
       text-align: center;
     }
+
     .hero-eyebrow {
       display: inline-flex;
       align-items: center;
@@ -25,7 +27,13 @@
       padding: 6px 16px;
       margin-bottom: 28px;
     }
-    .hero-eyebrow::before { content: '⬡'; color: var(--gold); font-size: 0.9em; }
+
+    .hero-eyebrow::before {
+      content: '⬡';
+      color: var(--gold);
+      font-size: 0.9em;
+    }
+
     .hero-title {
       font-family: var(--font-display);
       font-size: clamp(2.8rem, 7vw, 5rem);
@@ -35,6 +43,7 @@
       margin-bottom: 20px;
       animation: flicker 8s infinite;
     }
+
     .hero-title span {
       background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--amber) 100%);
       -webkit-background-clip: text;
@@ -42,6 +51,7 @@
       background-clip: text;
       display: block;
     }
+
     .hero-subtitle {
       font-size: clamp(0.95rem, 2vw, 1.1rem);
       color: var(--text-secondary);
@@ -49,8 +59,17 @@
       margin: 0 auto 48px;
       line-height: 1.75;
     }
-    .cta-box { text-align: center; margin: 0 auto 60px; }
-    .wizard-container { max-width: 660px; margin: 0 auto 60px; }
+
+    .cta-box {
+      text-align: center;
+      margin: 0 auto 60px;
+    }
+
+    .wizard-container {
+      max-width: 660px;
+      margin: 0 auto 60px;
+    }
+
     .stepper {
       display: flex;
       align-items: center;
@@ -58,6 +77,7 @@
       gap: 0;
       margin-bottom: 36px;
     }
+
     .step-item {
       display: flex;
       flex-direction: column;
@@ -65,6 +85,7 @@
       gap: 8px;
       position: relative;
     }
+
     .step-item:not(:last-child)::after {
       content: '';
       position: absolute;
@@ -76,9 +97,11 @@
       transition: background var(--transition);
       z-index: 0;
     }
+
     .step-item.completed:not(:last-child)::after {
       background: linear-gradient(90deg, var(--gold), var(--border));
     }
+
     .step-dot {
       width: 36px;
       height: 36px;
@@ -95,17 +118,20 @@
       z-index: 1;
       position: relative;
     }
+
     .step-item.active .step-dot {
       border-color: var(--gold);
       background: rgba(212, 160, 60, 0.12);
       color: var(--gold);
       box-shadow: var(--glow-gold-sm);
     }
+
     .step-item.completed .step-dot {
       border-color: var(--gold);
       background: linear-gradient(135deg, var(--gold), var(--amber));
       color: #0a0806;
     }
+
     .step-label {
       font-size: 0.7rem;
       font-weight: 600;
@@ -115,8 +141,12 @@
       transition: color var(--transition);
       white-space: nowrap;
     }
+
     .step-item.active .step-label,
-    .step-item.completed .step-label { color: var(--gold-dim); }
+    .step-item.completed .step-label {
+      color: var(--gold-dim);
+    }
+
     .stepper-gap {
       flex: 1;
       height: 1px;
@@ -124,8 +154,16 @@
       margin: 0 8px;
       margin-bottom: 28px;
     }
-    .step-panel { display: none; animation: fadeUp 0.4s ease both; }
-    .step-panel.active { display: block; }
+
+    .step-panel {
+      display: none;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .step-panel.active {
+      display: block;
+    }
+
     .wizard-card {
       background: var(--bg-card);
       backdrop-filter: var(--glass);
@@ -136,14 +174,18 @@
       position: relative;
       overflow: hidden;
     }
+
     .wizard-card::before {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       height: 1px;
       background: linear-gradient(90deg, transparent, var(--gold), transparent);
       opacity: 0.5;
     }
+
     .wizard-card-title {
       font-family: var(--font-display);
       font-size: 1.1rem;
@@ -152,11 +194,30 @@
       color: var(--text-primary);
       margin-bottom: 6px;
     }
-    .wizard-card-desc { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 24px; }
-    .char-counter { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); text-align: right; margin-top: 4px; }
-    .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+
+    .wizard-card-desc {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .char-counter {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-align: right;
+      margin-top: 4px;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
     .config-option {
-      background: rgba(255,255,255,0.03);
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 16px;
@@ -164,15 +225,47 @@
       transition: all var(--transition);
       position: relative;
     }
-    .config-option:hover, .config-option.selected { border-color: var(--gold); background: rgba(212,160,60,0.06); }
-    .config-option.selected::after { content: '✓'; position: absolute; top: 8px; right: 10px; font-size: 0.72rem; color: var(--gold); font-weight: 700; }
-    .config-option-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 6px; }
-    .config-option-value { font-size: 0.9rem; font-weight: 500; color: var(--text-primary); }
-    .view-count-selector { display: flex; gap: 8px; }
+
+    .config-option:hover,
+    .config-option.selected {
+      border-color: var(--gold);
+      background: rgba(212, 160, 60, 0.06);
+    }
+
+    .config-option.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: 0.72rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .config-option-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 6px;
+    }
+
+    .config-option-value {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .view-count-selector {
+      display: flex;
+      gap: 8px;
+    }
+
     .view-count-btn {
       flex: 1;
       padding: 10px;
-      background: rgba(255,255,255,0.03);
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text-secondary);
@@ -183,44 +276,121 @@
       transition: all var(--transition);
       text-align: center;
     }
-    .view-count-btn:hover, .view-count-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,160,60,0.08); }
+
+    .view-count-btn:hover,
+    .view-count-btn.active {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(212, 160, 60, 0.08);
+    }
+
     .link-box {
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(212,160,60,0.05);
-      border: 1px solid rgba(212,160,60,0.25);
+      background: rgba(212, 160, 60, 0.05);
+      border: 1px solid rgba(212, 160, 60, 0.25);
       border-radius: var(--radius-sm);
       padding: 14px 16px;
       margin: 20px 0;
     }
-    .link-url { font-family: var(--font-mono); font-size: 0.82rem; color: var(--gold-light); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .link-url {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--gold-light);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .success-icon {
-      width: 56px; height: 56px;
-      background: linear-gradient(135deg, rgba(212,160,60,0.15), rgba(232,130,26,0.1));
-      border: 1px solid rgba(212,160,60,0.3);
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, rgba(212, 160, 60, 0.15), rgba(232, 130, 26, 0.1));
+      border: 1px solid rgba(212, 160, 60, 0.3);
       border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 1.6rem;
       margin: 0 auto 16px;
       box-shadow: var(--glow-gold-sm);
     }
-    .secret-meta { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
-    .wizard-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 28px; }
-    .features { padding: 60px 0; }
-    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
-    .feature-card { padding: 28px 24px; text-align: center; }
-    .feature-icon { font-size: 1.8rem; margin-bottom: 14px; display: block; }
-    .feature-title { font-family: var(--font-display); font-size: 0.95rem; font-weight: 600; letter-spacing: 0.05em; color: var(--text-primary); margin-bottom: 8px; }
-    .feature-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.65; }
+
+    .secret-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .wizard-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 28px;
+    }
+
+    .features {
+      padding: 60px 0;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .feature-card {
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .feature-icon {
+      font-size: 1.8rem;
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .feature-title {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
     @media (max-width: 680px) {
-      .wizard-card { padding: 24px 20px; }
-      .config-grid { grid-template-columns: 1fr; }
-      .features-grid { grid-template-columns: 1fr; }
-      .step-label { display: none; }
+      .wizard-card {
+        padding: 24px 20px;
+      }
+
+      .config-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .step-label {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <nav class="navbar" id="navbar">
@@ -365,6 +535,9 @@
               <span class="badge badge-gold" id="expiryBadge">⏱ Expires in 1 hour</span>
               <span class="badge badge-active">🔒 Secured</span>
             </div>
+            <div id="sensitivityHintBox"
+              style="display:none; margin-top:14px; padding:10px 14px; background:rgba(212,160,60,0.06); border:1px solid rgba(212,160,60,0.25); border-radius:var(--radius-sm); font-size:0.8rem; color:var(--text-secondary);">
+            </div>
             <div class="divider"></div>
             <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
               <button class="btn btn-ghost btn-sm" onclick="resetWizard()">+ Create Another</button>
@@ -385,17 +558,20 @@
           <div class="glass-card feature-card">
             <span class="feature-icon">🔥</span>
             <div class="feature-title">Burn-on-Read</div>
-            <p class="feature-desc">The moment your secret is viewed, it's permanently wiped from the database. No logs, no residue.</p>
+            <p class="feature-desc">The moment your secret is viewed, it's permanently wiped from the database. No logs,
+              no residue.</p>
           </div>
           <div class="glass-card feature-card">
             <span class="feature-icon">🔗</span>
             <div class="feature-title">UUID Links</div>
-            <p class="feature-desc">Each secret gets a cryptographically random UUID v4 link — impossible to guess with 2¹²² possible combinations.</p>
+            <p class="feature-desc">Each secret gets a cryptographically random UUID v4 link — impossible to guess with
+              2¹²² possible combinations.</p>
           </div>
           <div class="glass-card feature-card">
             <span class="feature-icon">⏱</span>
             <div class="feature-title">Auto-Expiry TTL</div>
-            <p class="feature-desc">Set a time limit on your secrets. Unread vaults vanish automatically when the timer runs out.</p>
+            <p class="feature-desc">Set a time limit on your secrets. Unread vaults vanish automatically when the timer
+              runs out.</p>
           </div>
         </div>
       </section>
@@ -404,7 +580,8 @@
   </main>
 
   <footer>
-    <p>© 2026 Created By : Saubhagya Srivastava <strong style="color:var(--gold-dim);">AshVault</strong> · <a href="about.html">How it Works</a></p>
+    <p>© 2026 Created By : Saubhagya Srivastava <strong style="color:var(--gold-dim);">AshVault</strong> · <a
+        href="about.html">How it Works</a></p>
   </footer>
 
   <div class="toast-container" id="toastContainer"></div>
@@ -524,6 +701,15 @@
           const expiryLabels = { '1h': '1 hour', '24h': '24 hours', '7d': '7 days' };
           document.getElementById('expiryBadge').textContent = `⏱ Expires in ${expiryLabels[expiryVal]}`;
 
+          const hintBox = document.getElementById('sensitivityHintBox');
+          const hint = result.data.sensitivityHint;
+          if (hint && hint.isSensitive) {
+            hintBox.style.display = 'block';
+            hintBox.innerHTML = `🤖 <strong>AI flagged this as:</strong> ${hint.category.replace('_', ' ')} — ${hint.reason}. Suggested TTL: <strong>${hint.suggestedTTL}</strong>`;
+          } else {
+            hintBox.style.display = 'none';
+          }
+
           goToStep(3);
           showToast('Secret created! 🔐', 'success');
 
@@ -594,4 +780,5 @@
     }
   </script>
 </body>
+
 </html>
